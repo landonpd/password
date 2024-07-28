@@ -5,7 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	charm "password/passwordStorage"
+	stor "password/passwordStorage"
 	bubbleT "password/userInterface"
 	"time"
 
@@ -46,14 +46,14 @@ func main() {
 	defer db.Close()
 
 	//reading file to get all the passwords including old key and master password through charm
-	charmData, newAcct := charm.ReadData(config, db)
+	data, newAcct := stor.ReadDataCharm(config, db)
 
 	if newAcct {
 		pswrds.Pswrds = append(pswrds.Pswrds, pswrd.SavedPassword{Website: "", EncryptedPswrd: ""})
 		display = bubbleT.NewAcctDisplay
 	} else {
 		//data exists
-		err := yaml.Unmarshal(charmData, &pswrds)
+		err := yaml.Unmarshal(data, &pswrds)
 		if err != nil {
 			fmt.Printf("Error while unMarshaling. %v", err)
 		}
@@ -101,6 +101,11 @@ func main() {
 
 	//fmt.Println(bubbleT.DisplayType(display))
 	//running bubble tea wich gives really nice terminal interface, see extra file for details
+	var allText string
+	for _, pswrd := range pswrds.Pswrds {
+		allText = allText + "\n" + pswrd.Website + " : " + pswrd.EncryptedPswrd
+	}
+	//stor.WriteData("testFile.txt", allText) allText would be everything in the file,
 	p := tea.NewProgram(bubbleT.InitialModel(pswrds.Pswrds, db, pswrds.Config, display))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)

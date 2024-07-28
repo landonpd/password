@@ -5,13 +5,15 @@ import (
 	//bubbleT "Users/landondixon/src/goCode/passwordManager/bubbleTeaFunctions"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/charmbracelet/charm/kv"
 	"gopkg.in/yaml.v3"
 	//"io/ioutil"
 )
 
-func ReadData(c pswrd.CharmConfig, db *kv.KV) ([]byte, bool) {
+// reads data from charm cloud9L
+func ReadDataCharm(c pswrd.CharmConfig, db *kv.KV) ([]byte, bool) {
 	//var charmData []byte
 	display := false
 
@@ -39,8 +41,28 @@ func ReadData(c pswrd.CharmConfig, db *kv.KV) ([]byte, bool) {
 	return charmData, display
 }
 
+// read data from a file, just reads it in and stores it all together
+func ReadData(fileName string) string {
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		fmt.Printf("error opening %s: %s", fileName, err)
+		return ""
+	}
+	return string(data)
+}
+
+// writes the data to the given file, creates the file if it doesn't exist
+func WriteData(fileName, text string) {
+	data := []byte(text)
+	err := os.WriteFile(fileName, data, 0644) //0644 specifies the file is readable and writeable by the owner and readable by everyone else
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
 // writes to charm cloud
-func WritePasswords(passwords []pswrd.SavedPassword, Key int, db *kv.KV, c pswrd.CharmConfig) {
+func WritePasswordsCharm(passwords []pswrd.SavedPassword, Key int, db *kv.KV, c pswrd.CharmConfig) {
 
 	var pswrds pswrd.Passwords
 	pswrds.Pswrds = passwords

@@ -50,6 +50,7 @@ type model struct {
 	config        pswrd.CharmConfig
 }
 
+// creates model with given data
 func InitialModel(psswrds []pswrd.SavedPassword, DB *kv.KV, charmConfig pswrd.CharmConfig, displayType DisplayType) model {
 	ti := textinput.New()
 	ti.Placeholder = "Password"
@@ -75,17 +76,20 @@ func InitialModel(psswrds []pswrd.SavedPassword, DB *kv.KV, charmConfig pswrd.Ch
 
 }
 
+// initializes bubbleTea u/i
 func (m model) Init() tea.Cmd {
 	// Just return `nil`, which means "no I/O right now, please."
 	return textinput.Blink
 }
 
+// updates which logic function to be using
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
 		if k == "esc" || k == "ctrl+c" || k == "ctrl+z" {
-			stor.WritePasswords(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			//stor.WritePasswords(passwordFile.txt,m.passwords)
 			return m, tea.Quit
 		}
 	}
@@ -106,6 +110,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// this function determines which screen/view to go to when
 func (m model) View() string {
 	var s string
 	switch m.display {
@@ -122,6 +127,7 @@ func (m model) View() string {
 	return s
 }
 
+// u.i screen to enter data, different because it is for a new user
 func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
@@ -144,7 +150,8 @@ func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 			m.textInput.Reset()
 		case "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswords(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			//stor.WritePasswords(passwordFile.txt,m.passwords)
 			return m, tea.Quit
 		}
 	}
@@ -152,6 +159,7 @@ func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// ran the first time the program is ran, might be changing
 func newAcctView(m model) string {
 	var s string
 	//m.textInput.Placeholder="password"
@@ -164,6 +172,7 @@ func newAcctView(m model) string {
 	return s
 }
 
+// u/i screen where user types something in, could be master password, a website, or a password
 func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
@@ -200,7 +209,8 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 			m.textInput.Reset()
 		case "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswords(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			//stor.WritePasswords(passwordFile.txt,m.passwords)
 			return m, tea.Quit
 		}
 	}
@@ -208,6 +218,7 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// u/i screen for adding new passwords
 func inputView(m model) string {
 	var s string
 	if m.master || (!m.website && !m.generated) {
@@ -229,6 +240,7 @@ func inputView(m model) string {
 	return s
 }
 
+// u/i screen default I think
 func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	m.numChoices = len(m.passwords) - 1
 	switch msg := msg.(type) {
@@ -247,7 +259,7 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			toDelete := m.cursor + 1
 			m.passwords = append(m.passwords[:toDelete], m.passwords[toDelete+1:]...)
 			m.cursor = 0
-			//stor.WritePasswords(m.passwords,len(m.passwords[0].Website),m.db,m.config)
+			//stor.WritePasswords(m.passwords,len(m.passwords[0].Website),m.db,m.config) //need to write after every delete?
 		case "u", "U":
 			//update
 			m.display = generatePasswordDisplay //go to generate a password page
@@ -270,7 +282,8 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			clipboard.Write(clipboard.FmtText, []byte(strToCopy))
 			//m.cursor=0
 		case "q", "Q", "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswords(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			//stor.WritePasswords(passwordFile.txt,m.passwords)
 			return m, tea.Quit
 		}
 
@@ -278,6 +291,7 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// u/i screen to display the passwords
 func passwordsDisplayView(m model) string {
 	var s string
 	s += "\nPress c(copy), a(add), d(delete), u(update) or q(quit)\n\n"
@@ -293,6 +307,7 @@ func passwordsDisplayView(m model) string {
 	return s
 }
 
+// u/i logic for generating a password
 func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	m.numChoices = 2
 	switch msg := msg.(type) {
@@ -331,13 +346,15 @@ func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.display = GetInputDisplay
 			m.textInput.Reset()
 		case "q", "Q", "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswords(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			//stor.WritePasswords(passwordFile.txt,m.passwords)
 			return m, tea.Quit
 		}
 	}
 	return m, nil
 }
 
+// u/i screen for generating a password
 func generatePasswordView(m model) string {
 	var s string
 	choices := []string{"1. Generate a password", "2. make own password"}
