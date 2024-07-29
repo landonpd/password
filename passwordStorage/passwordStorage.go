@@ -52,8 +52,20 @@ func ReadData(fileName string) string {
 }
 
 // writes the data to the given file, creates the file if it doesn't exist
-func WriteData(fileName, text string) {
-	data := []byte(text)
+func WritePasswords(fileName string, passwords []pswrd.SavedPassword) {
+	var pswrds pswrd.Passwords
+	pswrds.Pswrds = passwords
+	// pswrds.Config = c
+	for i, password := range pswrds.Pswrds {
+		//have to use pswrds.Pswrds[i] to actually update the password, possibly need to change in other places
+		pswrds.Pswrds[i].EncryptedPswrd = pswrd.Encrypt(password.EncryptedPswrd, len(pswrds.Pswrds[0].Website))
+
+	}
+	var allText string
+	for _, pswrd := range pswrds.Pswrds {
+		allText = allText + pswrd.Website + " : " + pswrd.EncryptedPswrd + "\n"
+	}
+	data := []byte(allText)
 	err := os.WriteFile(fileName, data, 0644) //0644 specifies the file is readable and writeable by the owner and readable by everyone else
 	if err != nil {
 		fmt.Println(err)

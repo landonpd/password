@@ -88,8 +88,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
 		if k == "esc" || k == "ctrl+c" || k == "ctrl+z" {
-			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			//stor.WritePasswords(passwordFile.txt,m.passwords)
+			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswords("passwordFile.txt", m.passwords)
 			return m, tea.Quit
 		}
 	}
@@ -150,8 +150,8 @@ func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 			m.textInput.Reset()
 		case "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			//stor.WritePasswords(passwordFile.txt,m.passwords)
+			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswords("passwordFile.txt", m.passwords)
 			return m, tea.Quit
 		}
 	}
@@ -209,8 +209,8 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 			m.textInput.Reset()
 		case "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			//stor.WritePasswords(passwordFile.txt,m.passwords)
+			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswords("passwordFile.txt", m.passwords)
 			return m, tea.Quit
 		}
 	}
@@ -282,8 +282,8 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			clipboard.Write(clipboard.FmtText, []byte(strToCopy))
 			//m.cursor=0
 		case "q", "Q", "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			//stor.WritePasswords(passwordFile.txt,m.passwords)
+			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswords("passwordFile.txt", m.passwords)
 			return m, tea.Quit
 		}
 
@@ -346,8 +346,8 @@ func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.display = GetInputDisplay
 			m.textInput.Reset()
 		case "q", "Q", "ctrl+c", "ctrl+z", "esc":
-			stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			//stor.WritePasswords(passwordFile.txt,m.passwords)
+			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
+			stor.WritePasswords("passwordFile.txt", m.passwords)
 			return m, tea.Quit
 		}
 	}
