@@ -61,6 +61,7 @@ func WritePasswords(fileName string, passwords []pswrd.SavedPassword) {
 		pswrds.Pswrds[i].EncryptedPswrd = pswrd.Encrypt(password.EncryptedPswrd, len(pswrds.Pswrds[0].Website))
 
 	}
+	//look into what the heck yaml is cause it seems to simplify the code a bit
 	var allText string
 	for _, pswrd := range pswrds.Pswrds {
 		allText = allText + pswrd.Website + " : " + pswrd.EncryptedPswrd + "\n"
