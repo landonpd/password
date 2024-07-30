@@ -7,23 +7,25 @@ import (
 	//"io/ioutil"
 )
 
-type CharmConfig struct {
-	DatabaseName string
-	AccountName  string
-	AccountKey   string
-}
+// not needed
+// type CharmConfig struct {
+// 	DatabaseName string
+// 	AccountName  string
+// 	AccountKey   string
+// }
 
 type SavedPassword struct {
 	Website        string
 	EncryptedPswrd string //`yaml:"password"`
 }
 
-type Passwords struct {
-	//master password here maybe
-	//maybe key here, probably eventually but not now
-	Pswrds []SavedPassword // `yaml:"Passwords"`
-	Config CharmConfig
-}
+// not needed either, just gonna be savedPassword slice
+// type Passwords struct {
+// 	//master password here maybe
+// 	//maybe key here, probably eventually but not now
+// 	Pswrds []SavedPassword // `yaml:"Passwords"`
+// 	Config CharmConfig
+// }
 
 const CHARACTERS = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*"
 const NUM_CHAR = len(CHARACTERS)

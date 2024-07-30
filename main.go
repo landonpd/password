@@ -2,18 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	stor "password/passwordStorage"
 	uI "password/userInterface"
-	"time"
 
 	pswrd "password/passwordFunctions" //"Users/landondixon/src/goCode/passwordManager/passwordFunctions"  //github.com/landonpd/password/
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea" //if my code is on github I can just include it from their, might be a sneaky little way to get my file there
-	"github.com/charmbracelet/charm/kv"
 	// "crypto/aes" I will be useing aes
 	// "crypto/rand"
 )
@@ -28,23 +25,23 @@ func main() {
 	var newKey int //, oldKey, passwordCount int //choice, createPasswordChoice,
 	//var passwords []pswrd.SavedPassword
 
-	var pswrds pswrd.Passwords
+	var pswrds []pswrd.SavedPassword
 	display := uI.GetInputDisplay
 	//var masterPasswordToSave pswrd.SavedPassword
 	//passwordCorrect:=false//,done:=false
-	config := pswrd.CharmConfig{
-		DatabaseName: "password-db",
-		AccountName:  "Landon",
-		AccountKey:   "my-passwords",
-	}
-	pswrds.Config = config
+	// config := pswrd.CharmConfig{
+	// 	DatabaseName: "password-db",
+	// 	AccountName:  "Landon",
+	// 	AccountKey:   "my-passwords",
+	// }
+	// pswrds.Config = config
 	//generating new encryption key
 
-	db, err := kv.OpenWithDefaults(config.DatabaseName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	// db, err := kv.OpenWithDefaults(config.DatabaseName)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close()
 
 	//reading file to get all the passwords including old key and master password through charm
 	// data, newAcct := stor.ReadDataCharm(config, db)
@@ -81,22 +78,22 @@ func main() {
 		// fmt.Println(passwords)
 		savedPassword := strings.Split(passwords, " : ")
 		tempPsswrd := pswrd.SavedPassword{Website: savedPassword[0], EncryptedPswrd: savedPassword[1]}
-		pswrds.Pswrds = append(pswrds.Pswrds, tempPsswrd)
+		pswrds = append(pswrds, tempPsswrd)
 	}
 
 	//got them now need to decrypt them
-	for i, password := range pswrds.Pswrds {
+	for i, password := range pswrds {
 		//have to use pswrds.Pswrds[i] to actually update the password, possibly need to change in other places
-		pswrds.Pswrds[i].EncryptedPswrd = pswrd.Decrypt(password.EncryptedPswrd, len(pswrds.Pswrds[0].Website))
+		pswrds[i].EncryptedPswrd = pswrd.Decrypt(password.EncryptedPswrd, len(pswrds[0].Website))
 
 	}
 	//fmt.Println(pswrds.Pswrds[len(pswrds.Pswrds)-1].Website)
 	//fmt.Println(fileDataLst[len(fileDataLst)-1])
 
 	//possibly messing things up, change the key for the encryption but never put in the master key so old master key, new encryption key maybe
-	rand.Seed(time.Now().Unix())
+	// rand.Seed(time.Now().Unix())
 	newKey = rand.Int() % LIMIT
-	pswrds.Pswrds[0].Website = pswrd.GeneratePassword(newKey)
+	pswrds[0].Website = pswrd.GeneratePassword(newKey)
 	// db, err := kv.OpenWithDefaults(config.DatabaseName)
 	// if err != nil {
 	// 	log.Fatal(err)
@@ -128,7 +125,7 @@ func main() {
 	//fmt.Println(bubbleT.DisplayType(display))
 	//running bubble tea wich gives really nice terminal interface, see extra file for details
 
-	p := tea.NewProgram(uI.InitialModel(pswrds.Pswrds, db, pswrds.Config, display))
+	p := tea.NewProgram(uI.InitialModel(pswrds, display)) //db, pswrds.Config
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)

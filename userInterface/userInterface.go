@@ -8,7 +8,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/charm/kv"
 	"golang.design/x/clipboard"
 )
 
@@ -46,12 +45,12 @@ type model struct {
 	generated     bool
 	reenterPswd   bool
 	textInput     textinput.Model
-	db            *kv.KV
-	config        pswrd.CharmConfig
+	// db            *kv.KV
+	// config        pswrd.CharmConfig
 }
 
 // creates model with given data
-func InitialModel(psswrds []pswrd.SavedPassword, DB *kv.KV, charmConfig pswrd.CharmConfig, displayType DisplayType) model {
+func InitialModel(psswrds []pswrd.SavedPassword, displayType DisplayType) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
 	ti := textinput.New()
 	ti.Placeholder = "Password"
 	ti.Focus() //what is this
@@ -70,8 +69,8 @@ func InitialModel(psswrds []pswrd.SavedPassword, DB *kv.KV, charmConfig pswrd.Ch
 		generated:     false,
 		reenterPswd:   false,
 		textInput:     ti,
-		db:            DB,
-		config:        charmConfig,
+		// db:            DB,
+		// config:        charmConfig,
 	}
 
 }
