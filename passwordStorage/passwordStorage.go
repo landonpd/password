@@ -59,12 +59,12 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 
 	// }
 	//look into what the heck yaml is cause it seems to simplify the code a bit
-	pswrd.DisplayPasswords(pswrds)
+	// pswrd.DisplayPasswords(pswrds)
 	var allText = "correct\n"
 	for _, pswrd := range pswrds {
 		allText = allText + pswrd.Website + ": " + pswrd.EncryptedPswrd + "\n"
 	}
-	fmt.Println(allText)
+	// fmt.Println(allText)
 	data := []byte(allText)
 	encryptedData := pswrd.EncryptAes(key, data)
 	err := os.WriteFile(fileName, encryptedData, 0644) //0644 specifies the file is readable and writeable by the owner and readable by everyone else

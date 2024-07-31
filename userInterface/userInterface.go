@@ -21,7 +21,8 @@ import (
 //		AccountKey string
 //	 }
 
-//might have issue of displaying new passwords right away, update ended up putting a new one in because there was nothing selected, that is ok, as long as passwords are added correctly
+//issues, update adds a new password instead of actually updating,
+// deleting all of the passwords crashes the program, slice out of range error, need error check to catch that, it happens on 297, it might be from spamming delete key
 
 type DisplayType int
 
@@ -205,8 +206,8 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					fmt.Println("hi")
 					m.key = pswrd.HashKey([]byte(inputtedPassword)) //store the hashed key to use to encrypt and decrypt later on
 					//splitting data from file into website and password pairs and storing them in m.paswords
-					plainTxt := string(pswrd.EncryptAes(m.key, []byte(m.fileData))) //something going wrong here I think
-					fmt.Println(plainTxt)
+					plainTxt := string(pswrd.DecryptAes(m.key, []byte(m.fileData))) //something going wrong here I think
+					// fmt.Println(plainTxt)
 					fileDataLst := strings.Split(plainTxt, "\n")
 					fileDataLst = fileDataLst[1 : len(fileDataLst)-1] //don't need first line, it is a check, don't need last line, it is blank
 					fmt.Println(fileDataLst)
@@ -216,8 +217,8 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 						tempPsswrd := pswrd.SavedPassword{Website: savedPassword[0], EncryptedPswrd: savedPassword[1]}
 						m.passwords = append(m.passwords, tempPsswrd)
 					}
-					fmt.Println("passwords")
-					pswrd.DisplayPasswords(m.passwords)
+					// fmt.Println("passwords")
+					// pswrd.DisplayPasswords(m.passwords)
 
 					m.display = passwordsDisplay //got password correct so going to next seciton
 					m.cursor = 0
@@ -279,7 +280,7 @@ func inputView(m model) string {
 
 // u/i screen default screen that displays the options
 func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
-	m.numChoices = len(m.passwords) - 1
+	m.numChoices = len(m.passwords)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -331,11 +332,11 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 func passwordsDisplayView(m model) string {
 	var s string
 	s += "\nPress c(copy), a(add), d(delete), u(update) or q(quit)\n\n"
-	for _, savedPasswords := range m.passwords {
+	for i, savedPasswords := range m.passwords {
 		cursor := " " // no cursor
-		// if m.cursor == i-1 {
-		cursor = ">" // cursor!
-		// }
+		if m.cursor == i {
+			cursor = ">" // cursor!
+		}
 		// if i > 0 {
 		s += fmt.Sprintf("%s [ ] %s\n", cursor, savedPasswords.Website)
 		// }
