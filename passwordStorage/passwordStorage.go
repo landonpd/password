@@ -38,32 +38,36 @@ import (
 // }
 
 // read data from a file, just reads it in and stores it all together
-func ReadData(fileName string) string {
+func ReadData(fileName string) (string, error) {
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("error opening %s: %s", fileName, err)
-		return ""
+		return "", err
 	}
-	return string(data)
+	return string(data), nil
 }
 
 // writes the data to the given file, creates the file if it doesn't exist
-func WritePasswords(fileName string, pswrds []pswrd.SavedPassword) {
+func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 	// var pswrds []pswrd.SavedPassword
 	// pswrds = passwords
 	// pswrds.Config = c
-	for i, password := range pswrds {
-		//have to use pswrds.Pswrds[i] to actually update the password, possibly need to change in other places
-		pswrds[i].EncryptedPswrd = pswrd.Encrypt(password.EncryptedPswrd, len(pswrds[0].Website))
+	//not going to be needed anymore
+	// for i, password := range pswrds {
+	// 	//have to use pswrds.Pswrds[i] to actually update the password, possibly need to change in other places
+	// 	pswrds[i].EncryptedPswrd = pswrd.Encrypt(password.EncryptedPswrd, len(pswrds[0].Website))
 
-	}
+	// }
 	//look into what the heck yaml is cause it seems to simplify the code a bit
-	var allText string
+	pswrd.DisplayPasswords(pswrds)
+	var allText = "correct\n"
 	for _, pswrd := range pswrds {
-		allText = allText + pswrd.Website + " : " + pswrd.EncryptedPswrd + "\n"
+		allText = allText + pswrd.Website + ": " + pswrd.EncryptedPswrd + "\n"
 	}
+	fmt.Println(allText)
 	data := []byte(allText)
-	err := os.WriteFile(fileName, data, 0644) //0644 specifies the file is readable and writeable by the owner and readable by everyone else
+	encryptedData := pswrd.EncryptAes(key, data)
+	err := os.WriteFile(fileName, encryptedData, 0644) //0644 specifies the file is readable and writeable by the owner and readable by everyone else
 	if err != nil {
 		fmt.Println(err)
 		return

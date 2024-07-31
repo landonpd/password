@@ -6,6 +6,10 @@ import (
 	stor "password/passwordStorage"
 	"strconv"
 
+	"strings"
+
+	"bytes"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
@@ -16,6 +20,9 @@ import (
 //	    AccountName string
 //		AccountKey string
 //	 }
+
+//might have issue of displaying new passwords right away, update ended up putting a new one in because there was nothing selected, that is ok, as long as passwords are added correctly
+
 type DisplayType int
 
 const (
@@ -35,6 +42,8 @@ const (
 // )
 
 type model struct {
+	fileData      string
+	key           []byte
 	passwords     []pswrd.SavedPassword
 	display       DisplayType
 	numChoices    int
@@ -50,7 +59,7 @@ type model struct {
 }
 
 // creates model with given data
-func InitialModel(psswrds []pswrd.SavedPassword, displayType DisplayType) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
+func InitialModel(fileData string, displayType DisplayType) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
 	ti := textinput.New()
 	ti.Placeholder = "Password"
 	ti.Focus() //what is this
@@ -59,9 +68,11 @@ func InitialModel(psswrds []pswrd.SavedPassword, displayType DisplayType) model 
 
 	return model{
 
-		passwords:     psswrds,
+		fileData:      fileData,
+		key:           []byte{},
+		passwords:     []pswrd.SavedPassword{},
 		display:       displayType,
-		numChoices:    len(psswrds) - 1,
+		numChoices:    0,
 		cursor:        0,
 		pswrdtoUpdate: 0,
 		master:        true,
@@ -73,6 +84,13 @@ func InitialModel(psswrds []pswrd.SavedPassword, displayType DisplayType) model 
 		// config:        charmConfig,
 	}
 
+}
+
+// what I need to do everytime I quit out
+func exitTasks(m model) (tea.Model, tea.Cmd) {
+
+	stor.WritePasswords(m.key, "passwordFile.txt", m.passwords)
+	return m, tea.Quit
 }
 
 // initializes bubbleTea u/i
@@ -88,8 +106,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		k := msg.String()
 		if k == "esc" || k == "ctrl+c" || k == "ctrl+z" {
 			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			stor.WritePasswords("passwordFile.txt", m.passwords)
-			return m, tea.Quit
+			return exitTasks(m)
 		}
 	}
 
@@ -126,7 +143,7 @@ func (m model) View() string {
 	return s
 }
 
-// u.i screen to enter data, different because it is for a new user
+// u/i screen to for new accounts, has user create and confirm a master password
 func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
@@ -135,12 +152,14 @@ func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			inputtedPassword := m.textInput.Value()
+			//first time they are putting in the password
 			if !m.reenterPswd {
-				m.passwords[0].EncryptedPswrd = inputtedPassword
+
+				m.key = pswrd.HashKey([]byte(inputtedPassword)) //[]byte(inputtedPassword)
 				m.reenterPswd = true
 				//fmt.Println("hi")
 			} else {
-				if inputtedPassword == m.passwords[0].EncryptedPswrd {
+				if bytes.Equal(pswrd.HashKey([]byte(inputtedPassword)), m.key) {
 					m.display = passwordsDisplay
 					m.master = false
 				} else {
@@ -150,15 +169,14 @@ func updateNewAcct(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.textInput.Reset()
 		case "ctrl+c", "ctrl+z", "esc":
 			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			stor.WritePasswords("passwordFile.txt", m.passwords)
-			return m, tea.Quit
+			return exitTasks(m)
 		}
 	}
 	m.textInput, cmd = m.textInput.Update(msg)
 	return m, cmd
 }
 
-// ran the first time the program is ran, might be changing
+// view for new accounts, ran the first time the program is ran, might be changing still, only ran once then file is updated and it doesn't happen again
 func newAcctView(m model) string {
 	var s string
 	//m.textInput.Placeholder="password"
@@ -181,12 +199,32 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "enter":
 			inputtedPassword := m.textInput.Value()
 			if m.master {
-				//fmt.Println(inputtedPassword)
-				if inputtedPassword == m.passwords[0].EncryptedPswrd {
+				fmt.Println(inputtedPassword)
+				//check if the entered password is correct
+				if pswrd.CheckMasterPswrd(inputtedPassword, m.fileData) {
+					fmt.Println("hi")
+					m.key = pswrd.HashKey([]byte(inputtedPassword)) //store the hashed key to use to encrypt and decrypt later on
+					//splitting data from file into website and password pairs and storing them in m.paswords
+					plainTxt := string(pswrd.EncryptAes(m.key, []byte(m.fileData))) //something going wrong here I think
+					fmt.Println(plainTxt)
+					fileDataLst := strings.Split(plainTxt, "\n")
+					fileDataLst = fileDataLst[1 : len(fileDataLst)-1] //don't need first line, it is a check, don't need last line, it is blank
+					fmt.Println(fileDataLst)
+					for _, passwords := range fileDataLst {
+						// fmt.Println(passwords)
+						savedPassword := strings.Split(passwords, ": ") //consider making this a variable
+						tempPsswrd := pswrd.SavedPassword{Website: savedPassword[0], EncryptedPswrd: savedPassword[1]}
+						m.passwords = append(m.passwords, tempPsswrd)
+					}
+					fmt.Println("passwords")
+					pswrd.DisplayPasswords(m.passwords)
+
 					m.display = passwordsDisplay //got password correct so going to next seciton
 					m.cursor = 0
 					m.master = false
-				}
+				} //maybe else statement to change to the reenter password thing, different thing to
+
+				//entering a website
 			} else if m.website {
 				var newPassword pswrd.SavedPassword
 
@@ -195,11 +233,12 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				newPassword.Website = inputtedPassword
 				newPassword.EncryptedPswrd = ""
 				m.passwords = append(m.passwords, newPassword)
-
+				//entering a password, it is not generated, going to newest one which has already had a website
 			} else if !m.generated {
 				m.passwords[len(m.passwords)-1].EncryptedPswrd = m.textInput.Value()
 				m.cursor = 0
 				m.display = passwordsDisplay
+				//we are generating a password for the newest pair
 			} else {
 				n, _ := strconv.Atoi(m.textInput.Value())
 				m.passwords[len(m.passwords)-1].EncryptedPswrd = pswrd.GeneratePassword(n)
@@ -209,8 +248,7 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.textInput.Reset()
 		case "ctrl+c", "ctrl+z", "esc":
 			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			stor.WritePasswords("passwordFile.txt", m.passwords)
-			return m, tea.Quit
+			return exitTasks(m)
 		}
 	}
 	m.textInput, cmd = m.textInput.Update(msg)
@@ -239,7 +277,7 @@ func inputView(m model) string {
 	return s
 }
 
-// u/i screen default I think
+// u/i screen default screen that displays the options
 func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	m.numChoices = len(m.passwords) - 1
 	switch msg := msg.(type) {
@@ -269,7 +307,7 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 		case "a", "A": //add new passwords
 			m.display = generatePasswordDisplay
-			m.pswrdtoUpdate = 0
+			m.pswrdtoUpdate = 0 //does this work, is the password at 0 not one of the options?
 			m.cursor = 0
 			// m.website=true
 			//m.numChoices=2
@@ -277,31 +315,30 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 		case "c", "C", " ", "enter":
 			//code to copy here
-			strToCopy := m.passwords[m.cursor+1].EncryptedPswrd
+			strToCopy := m.passwords[m.cursor].EncryptedPswrd
 			clipboard.Write(clipboard.FmtText, []byte(strToCopy))
 			//m.cursor=0
 		case "q", "Q", "ctrl+c", "ctrl+z", "esc":
 			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			stor.WritePasswords("passwordFile.txt", m.passwords)
-			return m, tea.Quit
+			return exitTasks(m)
 		}
 
 	}
 	return m, nil
 }
 
-// u/i screen to display the passwords
+// u/i screen to display the passwords, default screen display
 func passwordsDisplayView(m model) string {
 	var s string
 	s += "\nPress c(copy), a(add), d(delete), u(update) or q(quit)\n\n"
-	for i, savedPasswords := range m.passwords {
+	for _, savedPasswords := range m.passwords {
 		cursor := " " // no cursor
-		if m.cursor == i-1 {
-			cursor = ">" // cursor!
-		}
-		if i > 0 {
-			s += fmt.Sprintf("%s [ ] %s\n", cursor, savedPasswords.Website)
-		}
+		// if m.cursor == i-1 {
+		cursor = ">" // cursor!
+		// }
+		// if i > 0 {
+		s += fmt.Sprintf("%s [ ] %s\n", cursor, savedPasswords.Website)
+		// }
 	}
 	return s
 }
@@ -346,8 +383,7 @@ func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.textInput.Reset()
 		case "q", "Q", "ctrl+c", "ctrl+z", "esc":
 			// stor.WritePasswordsCharm(m.passwords, len(m.passwords[0].Website), m.db, m.config)
-			stor.WritePasswords("passwordFile.txt", m.passwords)
-			return m, tea.Quit
+			return exitTasks(m)
 		}
 	}
 	return m, nil
