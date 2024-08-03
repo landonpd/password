@@ -137,11 +137,11 @@ func DecryptAes(key, cipherTxt []byte) []byte {
 
 // this takes the master password and the ciphertext from the file. Checks if the first line of the ciphertext is the word correct
 // this will be used to check if the master password is correct
-func CheckMasterPswrd(pswrd, cipherTxt string) bool {
+func CheckMasterPswrd(pswrd, cipherTxt string) (string, bool) {
 	key := HashKey([]byte(pswrd))
 	plainTxt := string(DecryptAes(key, []byte(cipherTxt)))
 	pswrds := strings.Split(plainTxt, "\n")
-	return pswrds[0] == "correct"
+	return plainTxt, pswrds[0] == "correct"
 }
 
 // decrypts the given password

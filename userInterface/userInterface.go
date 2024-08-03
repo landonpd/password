@@ -205,15 +205,15 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			if m.master {
 				fmt.Println(inputtedPassword)
 				//check if the entered password is correct
-				if pswrd.CheckMasterPswrd(inputtedPassword, m.fileData) {
-					fmt.Println("hi")
+				if plainTxt, correct := pswrd.CheckMasterPswrd(inputtedPassword, m.fileData); correct {
+
 					m.key = pswrd.HashKey([]byte(inputtedPassword)) //store the hashed key to use to encrypt and decrypt later on
 					//splitting data from file into website and password pairs and storing them in m.paswords
-					plainTxt := string(pswrd.DecryptAes(m.key, []byte(m.fileData))) //something going wrong here I think
+					// plainTxt := string(pswrd.DecryptAes(m.key, []byte(m.fileData))) //something going wrong here I think
 					// fmt.Println(plainTxt)
 					fileDataLst := strings.Split(plainTxt, "\n")
 					fileDataLst = fileDataLst[1 : len(fileDataLst)-1] //don't need first line, it is a check, don't need last line, it is blank
-					fmt.Println(fileDataLst)
+
 					for _, passwords := range fileDataLst {
 						// fmt.Println(passwords)
 						savedPassword := strings.Split(passwords, ": ") //consider making this a variable
@@ -239,13 +239,23 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.passwords = append(m.passwords, newPassword)
 				//entering a password, it is not generated, going to newest one which has already had a website
 			} else if !m.generated {
-				m.passwords[len(m.passwords)-1].EncryptedPswrd = m.textInput.Value()
+				if m.pswrdtoUpdate == -1 {
+					m.passwords[len(m.passwords)-1].EncryptedPswrd = m.textInput.Value()
+				} else {
+					//updating a password
+					m.passwords[m.pswrdtoUpdate].EncryptedPswrd = m.textInput.Value()
+				}
 				m.cursor = 0
 				m.display = passwordsDisplay
-				//we are generating a password for the newest pair
+				//we are generating a password for the newest pair first first firstNew
 			} else {
 				n, _ := strconv.Atoi(m.textInput.Value())
-				m.passwords[len(m.passwords)-1].EncryptedPswrd = pswrd.GeneratePassword(n)
+				if m.pswrdtoUpdate == -1 {
+					m.passwords[len(m.passwords)-1].EncryptedPswrd = pswrd.GeneratePassword(n)
+				} else {
+					m.passwords[m.pswrdtoUpdate].EncryptedPswrd = pswrd.GeneratePassword(n)
+				}
+
 				m.cursor = 0
 				m.display = passwordsDisplay
 			}
@@ -366,7 +376,7 @@ func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 		case "enter", " ":
 			//var newPassword pswrd.SavedPassword
-			if m.pswrdtoUpdate == -1 { //making a new password p$vX6WNMXZ test new firstNew
+			if m.pswrdtoUpdate == -1 { //making a new password
 
 				m.website = true
 
@@ -376,7 +386,7 @@ func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					m.generated = false
 				}
 			} else {
-				m.pswrdtoUpdate = m.cursor
+				//m.pswrdtoUpdate = m.cursor
 				if m.cursor == 0 {
 					m.generated = true
 				} else {
