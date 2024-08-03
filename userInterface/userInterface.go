@@ -22,7 +22,9 @@ import (
 //	 }
 
 //issues, update adds a new password instead of actually updating,
-// deleting all of the passwords crashes the program, slice out of range error, need error check to catch that, it happens on 297, it might be from spamming delete key
+// deleting all of the passwords crashes the program, slice out of range error, need error check to catch that, it happens on 297,
+//it might be from spamming delete key.
+//
 
 type DisplayType int
 
@@ -89,8 +91,9 @@ func InitialModel(fileData string, displayType DisplayType) model { //DB *kv.KV,
 
 // what I need to do everytime I quit out
 func exitTasks(m model) (tea.Model, tea.Cmd) {
-
-	stor.WritePasswords(m.key, "passwordFile.txt", m.passwords)
+	if len(m.passwords) != 0 { //move this if statement into WritePasswords if I want a new user to be able to put in a master password and no other passwords and still save the master password
+		stor.WritePasswords(m.key, "passwordFile.txt", m.passwords)
+	}
 	return m, tea.Quit
 }
 
@@ -256,7 +259,7 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// u/i screen for adding new passwords
+// u/i screen for inputting somethimg, could be password or website
 func inputView(m model) string {
 	var s string
 	if m.master || (!m.website && !m.generated) {
@@ -294,9 +297,11 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 		case "d", "D": //delete
 			//here will be delete, get cursor location, use that to delete that location from the list
-			toDelete := m.cursor + 1
-			m.passwords = append(m.passwords[:toDelete], m.passwords[toDelete+1:]...)
-			m.cursor = 0
+			if len(m.passwords) != 0 {
+				toDelete := m.cursor
+				m.passwords = append(m.passwords[:toDelete], m.passwords[toDelete+1:]...)
+				m.cursor = 0
+			}
 			//stor.WritePasswords(m.passwords,len(m.passwords[0].Website),m.db,m.config) //need to write after every delete?
 		case "u", "U":
 			//update
@@ -308,7 +313,7 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 		case "a", "A": //add new passwords
 			m.display = generatePasswordDisplay
-			m.pswrdtoUpdate = 0 //does this work, is the password at 0 not one of the options?
+			m.pswrdtoUpdate = -1 //does this work, is the password at 0 not one of the options?, -1 is not one of the options, does work
 			m.cursor = 0
 			// m.website=true
 			//m.numChoices=2
@@ -361,18 +366,17 @@ func updateGeneratePassword(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 		case "enter", " ":
 			//var newPassword pswrd.SavedPassword
-			if m.pswrdtoUpdate == 0 { //making a new password
+			if m.pswrdtoUpdate == -1 { //making a new password p$vX6WNMXZ test new firstNew
 
 				m.website = true
 
-				//tempPassword:=""
 				if m.cursor == 0 {
 					m.generated = true
 				} else {
 					m.generated = false
 				}
 			} else {
-				m.pswrdtoUpdate = m.cursor + 1
+				m.pswrdtoUpdate = m.cursor
 				if m.cursor == 0 {
 					m.generated = true
 				} else {

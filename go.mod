@@ -1,6 +1,6 @@
 module password
 
-go 1.21.0
+go 1.21 //go 1.21.0 for desktop
 
 require (
 	github.com/charmbracelet/bubbles v0.18.0
