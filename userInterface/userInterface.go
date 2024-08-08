@@ -52,6 +52,7 @@ type model struct {
 	numChoices    int
 	cursor        int
 	pswrdtoUpdate int
+	wrongCount    int
 	master        bool
 	website       bool
 	generated     bool
@@ -78,6 +79,7 @@ func InitialModel(fileData string, displayType DisplayType) model { //DB *kv.KV,
 		numChoices:    0,
 		cursor:        0,
 		pswrdtoUpdate: 0,
+		wrongCount:    0,
 		master:        true,
 		website:       false,
 		generated:     false,
@@ -205,7 +207,7 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			if m.master {
 				// fmt.Println(inputtedPassword)
 				//check if the entered password is correct
-				if plainTxt, correct := pswrd.CheckMasterPswrd(inputtedPassword, m.fileData); correct {
+				if plainTxt, correct := pswrd.CheckMasterPswrd(inputtedPassword, m.fileData); correct { //got the right password
 
 					m.key = pswrd.HashKey([]byte(inputtedPassword)) //store the hashed key to use to encrypt and decrypt later on
 					//splitting data from file into website and password pairs and storing them in m.paswords
@@ -226,7 +228,11 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					m.display = passwordsDisplay //got password correct so going to next seciton
 					m.cursor = 0
 					m.master = false
-				} //maybe else statement to change to the reenter password thing, different thing to
+					m.reenterPswd = false
+				} else {
+					m.wrongCount++
+					m.reenterPswd = true
+				}
 
 				//entering a website
 			} else if m.website {
@@ -272,9 +278,14 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 // u/i screen for inputting somethimg, could be password or website
 func inputView(m model) string {
 	var s string
-	if m.master || (!m.website && !m.generated) {
+
+	if (m.master && !m.reenterPswd) || (!m.website && !m.generated && !m.master) {
 		m.textInput.Placeholder = "password"
 		s = "Enter Password: "
+
+	} else if m.master && m.reenterPswd {
+		// m.textInput.Placeholder = "password"
+		s = "Incorrect " + strconv.Itoa(m.wrongCount) + " time(s) try again: "
 	} else if m.website {
 		//new password
 		m.textInput.Placeholder = "website"

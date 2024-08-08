@@ -64,9 +64,9 @@ func runCommand(command string, args ...string) { //the dots make this a variadi
 // read data from a file, just reads it in and stores it all together
 func ReadData(fileName string) (string, error) {
 	//first pulls from github to ensure the file is up to date
-	//runCommand("git", "pull") //should just work hopefully, fingers crossed
-	runCommand("git", "fetch")
-	runCommand("git", "checkout", "origin/main", "--", fileName)
+	runCommand("git", "pull") //should just work hopefully, fingers crossed
+	// runCommand("git", "fetch")
+	// runCommand("git", "checkout", "origin/main", "--", fileName)
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("error opening %s: %s", fileName, err)
