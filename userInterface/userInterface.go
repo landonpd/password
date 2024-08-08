@@ -203,7 +203,7 @@ func updateInput(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "enter":
 			inputtedPassword := m.textInput.Value()
 			if m.master {
-				fmt.Println(inputtedPassword)
+				// fmt.Println(inputtedPassword)
 				//check if the entered password is correct
 				if plainTxt, correct := pswrd.CheckMasterPswrd(inputtedPassword, m.fileData); correct {
 
