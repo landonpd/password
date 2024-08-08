@@ -55,7 +55,7 @@ func runCommand(command string, args ...string) { //the dots make this a variadi
 	}
 	_, err := cmd.CombinedOutput() //get output here if I need it
 	if err != nil {
-		fmt.Printf("Error running command '%s': %s\n", command, err)
+		fmt.Printf("Error running command '%s %s': %s\n", command, args, err)
 		return
 	}
 	//fmt.Printf("Output of '%s':\n%s\n", command, string(output))
