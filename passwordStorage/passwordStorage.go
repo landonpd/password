@@ -5,6 +5,8 @@ import (
 	//bubbleT "Users/landondixon/src/goCode/passwordManager/bubbleTeaFunctions"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	//"io/ioutil"
 )
 
@@ -37,8 +39,32 @@ import (
 // 	return charmData, display
 // }
 
+// will run a command on the command line
+func runCommand(command string, args ...string) { //the dots make this a variadic function, any number of string arguments can be passed in after command, I can pass in a slice if I put ... after the slice name
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		Args := []string{"/c", command}
+		Args = append(Args, args...)
+		cmd = exec.Command("cmd", Args...) //using the dots after allows me to pass a slice into the variadic function
+	case "linux", "darwin":
+		cmd = exec.Command(command, args...)
+	default:
+		fmt.Println("Unsupported OS")
+		return
+	}
+	_, err := cmd.CombinedOutput() //get output here if I need it
+	if err != nil {
+		fmt.Printf("Error running command '%s': %s\n", command, err)
+		return
+	}
+	//fmt.Printf("Output of '%s':\n%s\n", command, string(output))
+}
+
 // read data from a file, just reads it in and stores it all together
 func ReadData(fileName string) (string, error) {
+	//first pulls from github to ensure the file is up to date
+	runCommand("git", "pull") //should just work hopefully, fingers crossed
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("error opening %s: %s", fileName, err)
@@ -72,6 +98,10 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 		fmt.Println(err)
 		return
 	}
+	//after everything is written, automatically commits the changes to the file so that it is updated on all devices
+	runCommand("git", "add", fileName)
+	runCommand("git", "commit", "-m", "Used password manager.")
+	runCommand("git", "push")
 }
 
 // writes to charm cloud
