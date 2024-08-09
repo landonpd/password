@@ -137,7 +137,7 @@ func main() {
 	//fmt.Println(bubbleT.DisplayType(display))
 	//running bubble tea wich gives really nice terminal interface, see extra file for details
 
-	p := tea.NewProgram(uI.InitialModel(fileData, display)) //db, pswrds.Config
+	p := tea.NewProgram(uI.InitialModel(FILENAME, fileData, display)) //db, pswrds.Config
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)

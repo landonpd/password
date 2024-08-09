@@ -45,6 +45,7 @@ const (
 // )
 
 type model struct {
+	fileName      string
 	fileData      string
 	key           []byte
 	passwords     []pswrd.SavedPassword
@@ -63,7 +64,7 @@ type model struct {
 }
 
 // creates model with given data
-func InitialModel(fileData string, displayType DisplayType) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
+func InitialModel(fileName, fileData string, displayType DisplayType) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
 	ti := textinput.New()
 	ti.Placeholder = "Password"
 	ti.Focus() //what is this
@@ -71,7 +72,7 @@ func InitialModel(fileData string, displayType DisplayType) model { //DB *kv.KV,
 	ti.Width = 20
 
 	return model{
-
+		fileName:      fileName,
 		fileData:      fileData,
 		key:           []byte{},
 		passwords:     []pswrd.SavedPassword{},
@@ -94,7 +95,7 @@ func InitialModel(fileData string, displayType DisplayType) model { //DB *kv.KV,
 // what I need to do everytime I quit out
 func exitTasks(m model) (tea.Model, tea.Cmd) {
 	if len(m.passwords) != 0 { //move this if statement into WritePasswords if I want a new user to be able to put in a master password and no other passwords and still save the master password
-		stor.WritePasswords(m.key, "passwordFile.txt", m.passwords)
+		stor.WritePasswords(m.key, m.fileName, m.passwords)
 	}
 	return m, tea.Quit
 }
