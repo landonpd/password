@@ -17,7 +17,7 @@ import (
 
 func main() {
 	//variables and constants
-	const LIMIT = 100000
+	// const LIMIT = 100000
 	const FILENAME = "passwordFile.txt"
 	//var savedMasterPassword string //, stringtoWrite,inputtedmasterPassword, string
 	//var newKey int //, oldKey, passwordCount int //choice, createPasswordChoice,
