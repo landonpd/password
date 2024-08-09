@@ -103,7 +103,7 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 	//after everything is written, automatically commits the changes to the file so that it is updated on all devices
 	runCommand("git", "add", fileName)
 	runCommand("git", "commit", "-m", "Used password manager.")
-	runCommand("git", "rebase", "--strategy-option=theirs", "origin/main")
+	runCommand("git", "rebase", "--strategy-option=theirs", "origin/main") //this line merges/rebases (rebase is a merge but it makes it look like there was never two branches) the local changes with the remote changes
 	runCommand("git", "push")
 }
 
