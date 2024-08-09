@@ -103,6 +103,7 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 	//after everything is written, automatically commits the changes to the file so that it is updated on all devices
 	// runCommand("git", "add", fileName)
 	// runCommand("git", "commit", "-m", "Used password manager.")
+	// runCommand("git", "rebase", "origin", "main")
 	// runCommand("git", "push", "origin", "main")
 }
 
