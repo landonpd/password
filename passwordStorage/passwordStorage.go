@@ -65,8 +65,8 @@ func runCommand(command string, args ...string) { //the dots make this a variadi
 func ReadData(fileName string) (string, error) {
 	//first pulls from github to ensure the file is up to date
 	// runCommand("git", "pull") //should just work hopefully, fingers crossed
-	// runCommand("git", "fetch")
-	// runCommand("git", "checkout", "origin/main", "--", fileName)
+	runCommand("git", "fetch")
+	runCommand("git", "checkout", "origin/main", "--", fileName)
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("error opening %s: %s", fileName, err)
@@ -101,10 +101,10 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 		return
 	}
 	//after everything is written, automatically commits the changes to the file so that it is updated on all devices
-	// runCommand("git", "add", fileName)
-	// runCommand("git", "commit", "-m", "Used password manager.")
-	// runCommand("git", "rebase", "origin", "main")
-	// runCommand("git", "push", "origin", "main")
+	runCommand("git", "add", fileName)
+	runCommand("git", "commit", "-m", "Used password manager.")
+	runCommand("git", "rebase", "--strategy-option=theirs", "origin/main")
+	runCommand("git", "push")
 }
 
 // writes to charm cloud
