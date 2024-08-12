@@ -47,8 +47,26 @@ func main() {
 	// data, newAcct := stor.ReadDataCharm(config, db)
 	//read data without charm
 
+	//options for this whole github authentication:
+	//one: set up ssh key on both computers, provide the full path to each one in some file (maybe the passwordFile underneath
+	//the correct), then do the below
+	//two: I could hardcode in file paths, this is bad and hard to scale if I ever want to use other devices
+	//three: I could just use the command lines, they were working, main drawback for me is just security and having git installed,
+	// but I already have git installed on my desktop, and I probably want git installed on any windows machine in the future.
+	// sshKeyPath := "/path/to/your/private/ssh/key" // Replace with your SSH key path
+	// sshKey, err := os.ReadFile(sshKeyPath)
+	// if err != nil {
+	// 	fmt.Printf("Error reading SSH key: %s\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// auth, err := ssh.NewPublicKeys("git", sshKey, "")
+	// if err != nil {
+	// 	fmt.Printf("Error creating SSH auth method: %s\n", err)
+	// 	os.Exit(1)
+	// }
 	//opening the repo I am in so that I can push and pull changes from within without using the command line
-	repo, err := git.PlainOpen(REPOURL) //probably shouldn't be hardcoded
+	repo, err := git.PlainOpen(".") //probably shouldn't be hardcoded
 	if err != nil {
 		fmt.Printf("Error opening repository: %s\n", err)
 		os.Exit(1)
