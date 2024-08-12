@@ -58,6 +58,5 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 	//after everything is written, automatically commits the changes to the file so that it is updated on all devices
 	runCommand("git", "add", fileName)
 	runCommand("git", "commit", "-m", "Used password manager.")
-	// runCommand("git", "rebase", "--strategy-option=theirs", "origin/main") //this line merges/rebases (rebase is a merge but it makes it look like there was never two branches) the local changes with the remote changes, fails sometimes, I think when their are local changes in files other than passwordFile.bin, should look into fixing that.
-	runCommand("git", "push", "--force")
+	runCommand("git", "push", "--force") //forces the push to accept the local changes
 }

@@ -7,82 +7,30 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	badRand "math/rand"
+	"math/big"
 	"strings"
-	//"os"
-	//"io/ioutil"
-	// "crypto/aes"
 )
-
-// not needed
-// type CharmConfig struct {
-// 	DatabaseName string
-// 	AccountName  string
-// 	AccountKey   string
-// }
 
 type SavedPassword struct {
 	Website        string
-	EncryptedPswrd string //`yaml:"password"`
+	EncryptedPswrd string
 }
-
-// not needed either, just gonna be savedPassword slice
-// type Passwords struct {
-// 	//master password here maybe
-// 	//maybe key here, probably eventually but not now
-// 	Pswrds []SavedPassword // `yaml:"Passwords"`
-// 	Config CharmConfig
-// }
 
 const CHARACTERS = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*"
 const NUM_CHAR = len(CHARACTERS)
 
-// encrypts the given password using a ceasur cipher.
-// Going to redo, just need to put the whole thing together then encrypt the entire file.
-func Encrypt(password string, key int) string {
-	encryptedPassword := ""
-	for _, char := range password {
-		place := 0
-		for j, ch := range CHARACTERS {
-			if char == ch {
-				place = j
-				break
-			}
-		}
-		encryptedPassword += string(CHARACTERS[(place+key)%NUM_CHAR])
-	}
-
-	return encryptedPassword
-}
-
-func Decrypt(encryptedPassword string, key int) string {
-	decryptedPassword := ""
-	adjustedKey := key % NUM_CHAR
-	for _, char := range encryptedPassword {
-		place := 0
-		for j, ch := range CHARACTERS {
-			if char == ch {
-				place = j
-				break
-			}
-		}
-
-		adjustedPlace := place - adjustedKey
-		if adjustedPlace < 0 {
-			adjustedPlace = NUM_CHAR + adjustedPlace
-		}
-		decryptedPassword += string(CHARACTERS[adjustedPlace])
-	}
-
-	return decryptedPassword
-}
-
 // randomly generates passwords for the given length using the characters string and randlonly selecting from it
 func GeneratePassword(length int) string {
 	newPassword := ""
+	var randNum *big.Int
+	var err error
 	for i := 0; i < length; i++ {
-		newPassword += string(CHARACTERS[badRand.Intn(NUM_CHAR)])
+		randNum, err = rand.Int(rand.Reader, big.NewInt(int64(NUM_CHAR)))
+		if err == nil {
+			newPassword += string(CHARACTERS[int(randNum.Int64())])
+		}
 	}
+
 	return newPassword
 }
 
@@ -96,9 +44,6 @@ func HashKey(key []byte) []byte {
 
 // encrypts text using aes, counter stream mode and the key
 func EncryptAes(key, text []byte) []byte {
-
-	//fmt.Printf("the type of this %v\n", len(hashedKey)) //h.Sum(nil) returns [32]byte of the hash
-
 	c, err := aes.NewCipher(key)
 	if err != nil {
 		fmt.Println(err)
@@ -144,29 +89,12 @@ func CheckMasterPswrd(pswrd, cipherTxt string) (string, bool) {
 	return plainTxt, pswrds[0] == "correct"
 }
 
-// decrypts the given password
-// going to redo see encrypt
-
-// printys out the list of passwords, numbered, with website: password
-func DisplayPasswords(passwords []SavedPassword) { //(passwords []SavedPassword, oldKey int)
+// prints out the list of passwords, numbered, with website: password, not used but useful for possible future debugging
+func DisplayPasswords(passwords []SavedPassword) {
 	fmt.Println()
 	for i := 1; i < len(passwords); i++ {
-		// fmt.Printf("%d. %s: %s\n", i, passwords[i].Website, decrypt(passwords[i].password, oldKey))
 		fmt.Printf("%d. %s: %s\n", i, passwords[i].Website, passwords[i].EncryptedPswrd)
 	}
 	fmt.Println()
 
 }
-
-// func WritePasswords(passwords []SavedPassword,Key int) {
-// 	stringtoWrite:=""
-
-// 	for _,password:= range passwords{
-// 		stringtoWrite+=password.Website
-// 		stringtoWrite+=" "
-// 		stringtoWrite+=Encrypt(password.EncryptedPswrd,Key)
-// 		stringtoWrite+=" "
-
-// 	}
-// 	os.WriteFile("passwordFile.txt",[]byte(stringtoWrite) , 0644)
-// }
