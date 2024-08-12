@@ -69,8 +69,8 @@ func runCommand(command string, args ...string) { //the dots make this a variadi
 func ReadData(fileName string, repo *git.Repository, w *git.Worktree) (string, error) {
 	//first pulls from github to ensure the file is up to date
 	// runCommand("git", "pull") //should just work hopefully, fingers crossed
-	// runCommand("git", "fetch")
-	// runCommand("git", "checkout", "origin/main", "--", fileName)
+	runCommand("git", "fetch")
+	runCommand("git", "checkout", "origin/main", "--", fileName)
 
 	// Open the repository
 
@@ -126,10 +126,10 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword, r
 		return
 	}
 	//after everything is written, automatically commits the changes to the file so that it is updated on all devices
-	// runCommand("git", "add", fileName)
-	// runCommand("git", "commit", "-m", "Used password manager.")
-	// runCommand("git", "rebase", "--strategy-option=theirs", "origin/main") //this line merges/rebases (rebase is a merge but it makes it look like there was never two branches) the local changes with the remote changes
-	// runCommand("git", "push")
+	runCommand("git", "add", fileName)
+	runCommand("git", "commit", "-m", "Used password manager.")
+	runCommand("git", "rebase", "--strategy-option=theirs", "origin/main") //this line merges/rebases (rebase is a merge but it makes it look like there was never two branches) the local changes with the remote changes
+	runCommand("git", "push")
 
 	_, err = w.Add(fileName)
 	if err != nil {
