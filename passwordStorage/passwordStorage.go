@@ -7,6 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	//"io/ioutil"
 )
 
@@ -62,11 +66,32 @@ func runCommand(command string, args ...string) { //the dots make this a variadi
 }
 
 // read data from a file, just reads it in and stores it all together
-func ReadData(fileName string) (string, error) {
+func ReadData(fileName string, repo *git.Repository, w *git.Worktree) (string, error) {
 	//first pulls from github to ensure the file is up to date
 	// runCommand("git", "pull") //should just work hopefully, fingers crossed
 	runCommand("git", "fetch")
 	runCommand("git", "checkout", "origin/main", "--", fileName)
+
+	// Open the repository
+
+	//above two should be done in main and w and repo should be passed in, I guess as part of model?
+	// Fetch the latest changes
+	err := repo.Fetch(&git.FetchOptions{})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		fmt.Printf("Error fetching: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Checkout the specific file
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch:                    plumbing.ReferenceName("refs/remotes/origin/main"),
+		SparseCheckoutDirectories: []string{fileName},
+	})
+	if err != nil {
+		fmt.Printf("Error checking out file: %s\n", err)
+		os.Exit(1)
+	}
+
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("error opening %s: %s", fileName, err)
@@ -76,7 +101,7 @@ func ReadData(fileName string) (string, error) {
 }
 
 // writes the data to the given file, creates the file if it doesn't exist
-func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
+func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword, repo *git.Repository, w *git.Worktree) {
 	// var pswrds []pswrd.SavedPassword
 	// pswrds = passwords
 	// pswrds.Config = c
@@ -105,6 +130,30 @@ func WritePasswords(key []byte, fileName string, pswrds []pswrd.SavedPassword) {
 	runCommand("git", "commit", "-m", "Used password manager.")
 	runCommand("git", "rebase", "--strategy-option=theirs", "origin/main") //this line merges/rebases (rebase is a merge but it makes it look like there was never two branches) the local changes with the remote changes
 	runCommand("git", "push")
+
+	_, err = w.Add(fileName)
+	if err != nil {
+		fmt.Printf("Error adding file: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Commit the changes
+	_, err = w.Commit("Updated file", &git.CommitOptions{})
+	if err != nil {
+		fmt.Printf("Error committing: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Force push the changes
+	refspec := config.RefSpec("refs/heads/main:refs/heads/main")
+	err = repo.Push(&git.PushOptions{
+		RefSpecs: []config.RefSpec{refspec},
+		Force:    true,
+	})
+	if err != nil {
+		fmt.Printf("Error pushing: %s\n", err)
+		os.Exit(1)
+	}
 }
 
 // writes to charm cloud

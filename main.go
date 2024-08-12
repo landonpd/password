@@ -9,6 +9,7 @@ import (
 	//"Users/landondixon/src/goCode/passwordManager/passwordFunctions"  //github.com/landonpd/password/
 
 	tea "github.com/charmbracelet/bubbletea" //if my code is on github I can just include it from their, might be a sneaky little way to get my file there
+	"github.com/go-git/go-git/v5"
 	// "crypto/aes" I will be useing aes
 	// "crypto/rand"
 )
@@ -19,6 +20,7 @@ func main() {
 	//variables and constants
 	// const LIMIT = 100000
 	const FILENAME = "passwordFile.bin"
+	const REPOURL = "git@github.com:landonpd/password.git"
 	//var savedMasterPassword string //, stringtoWrite,inputtedmasterPassword, string
 	//var newKey int //, oldKey, passwordCount int //choice, createPasswordChoice,
 	//var passwords []pswrd.SavedPassword
@@ -44,7 +46,21 @@ func main() {
 	//reading file to get all the passwords including old key and master password through charm
 	// data, newAcct := stor.ReadDataCharm(config, db)
 	//read data without charm
-	fileData, err := stor.ReadData(FILENAME)
+
+	//opening the repo I am in so that I can push and pull changes from within without using the command line
+	repo, err := git.PlainOpen(REPOURL) //probably shouldn't be hardcoded
+	if err != nil {
+		fmt.Printf("Error opening repository: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Get the worktree
+	w, err := repo.Worktree()
+	if err != nil {
+		fmt.Printf("Error getting worktree: %s\n", err)
+		os.Exit(1)
+	}
+	fileData, err := stor.ReadData(FILENAME, repo, w)
 
 	if err != nil {
 		fmt.Println("file doesn't exist")
@@ -137,7 +153,7 @@ func main() {
 	//fmt.Println(bubbleT.DisplayType(display))
 	//running bubble tea wich gives really nice terminal interface, see extra file for details
 
-	p := tea.NewProgram(uI.InitialModel(FILENAME, fileData, display)) //db, pswrds.Config
+	p := tea.NewProgram(uI.InitialModel(FILENAME, fileData, display, repo, w)) //db, pswrds.Config
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
