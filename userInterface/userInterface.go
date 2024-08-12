@@ -12,7 +12,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/go-git/go-git/v5"
 	"golang.design/x/clipboard"
 )
 
@@ -60,14 +59,12 @@ type model struct {
 	generated     bool
 	reenterPswd   bool
 	textInput     textinput.Model
-	wT            *git.Worktree //worktree
-	repo          *git.Repository
 	// db            *kv.KV
 	// config        pswrd.CharmConfig
 }
 
 // creates model with given data
-func InitialModel(fileName, fileData string, displayType DisplayType, repo *git.Repository, w *git.Worktree) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
+func InitialModel(fileName, fileData string, displayType DisplayType) model { //DB *kv.KV, charmConfig pswrd.CharmConfig
 	ti := textinput.New()
 	ti.Placeholder = "Password"
 	ti.Focus() //what is this
@@ -89,8 +86,6 @@ func InitialModel(fileName, fileData string, displayType DisplayType, repo *git.
 		generated:     false,
 		reenterPswd:   false,
 		textInput:     ti,
-		wT:            w,
-		repo:          repo,
 		// db:            DB,
 		// config:        charmConfig,
 	}
@@ -100,7 +95,7 @@ func InitialModel(fileName, fileData string, displayType DisplayType, repo *git.
 // what I need to do everytime I quit out
 func exitTasks(m model) (tea.Model, tea.Cmd) {
 	if len(m.passwords) != 0 { //move this if statement into WritePasswords if I want a new user to be able to put in a master password and no other passwords and still save the master password
-		stor.WritePasswords(m.key, m.fileName, m.passwords, m.repo, m.wT)
+		stor.WritePasswords(m.key, m.fileName, m.passwords)
 	}
 	return m, tea.Quit
 }

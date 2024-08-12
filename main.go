@@ -9,7 +9,6 @@ import (
 	//"Users/landondixon/src/goCode/passwordManager/passwordFunctions"  //github.com/landonpd/password/
 
 	tea "github.com/charmbracelet/bubbletea" //if my code is on github I can just include it from their, might be a sneaky little way to get my file there
-	"github.com/go-git/go-git/v5"
 	// "crypto/aes" I will be useing aes
 	// "crypto/rand"
 )
@@ -20,7 +19,6 @@ func main() {
 	//variables and constants
 	// const LIMIT = 100000
 	const FILENAME = "passwordFile.bin"
-	const REPOURL = "git@github.com:landonpd/password.git"
 	//var savedMasterPassword string //, stringtoWrite,inputtedmasterPassword, string
 	//var newKey int //, oldKey, passwordCount int //choice, createPasswordChoice,
 	//var passwords []pswrd.SavedPassword
@@ -46,39 +44,7 @@ func main() {
 	//reading file to get all the passwords including old key and master password through charm
 	// data, newAcct := stor.ReadDataCharm(config, db)
 	//read data without charm
-
-	//options for this whole github authentication:
-	//one: set up ssh key on both computers, provide the full path to each one in some file (maybe the passwordFile underneath
-	//the correct), then do the below
-	//two: I could hardcode in file paths, this is bad and hard to scale if I ever want to use other devices
-	//three: I could just use the command lines, they were working, main drawback for me is just security and having git installed,
-	// but I already have git installed on my desktop, and I probably want git installed on any windows machine in the future.
-	// sshKeyPath := "/path/to/your/private/ssh/key" // Replace with your SSH key path
-	// sshKey, err := os.ReadFile(sshKeyPath)
-	// if err != nil {
-	// 	fmt.Printf("Error reading SSH key: %s\n", err)
-	// 	os.Exit(1)
-	// }
-
-	// auth, err := ssh.NewPublicKeys("git", sshKey, "")
-	// if err != nil {
-	// 	fmt.Printf("Error creating SSH auth method: %s\n", err)
-	// 	os.Exit(1)
-	// }
-	//opening the repo I am in so that I can push and pull changes from within without using the command line
-	repo, err := git.PlainOpen(".") //probably shouldn't be hardcoded
-	if err != nil {
-		fmt.Printf("Error opening repository: %s\n", err)
-		os.Exit(1)
-	}
-
-	// Get the worktree
-	w, err := repo.Worktree()
-	if err != nil {
-		fmt.Printf("Error getting worktree: %s\n", err)
-		os.Exit(1)
-	}
-	fileData, err := stor.ReadData(FILENAME, repo, w)
+	fileData, err := stor.ReadData(FILENAME)
 
 	if err != nil {
 		fmt.Println("file doesn't exist")
@@ -171,7 +137,7 @@ func main() {
 	//fmt.Println(bubbleT.DisplayType(display))
 	//running bubble tea wich gives really nice terminal interface, see extra file for details
 
-	p := tea.NewProgram(uI.InitialModel(FILENAME, fileData, display, repo, w)) //db, pswrds.Config
+	p := tea.NewProgram(uI.InitialModel(FILENAME, fileData, display)) //db, pswrds.Config
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
