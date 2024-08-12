@@ -361,7 +361,7 @@ func updatePasswords(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 // u/i screen to display the passwords, default screen display
 func passwordsDisplayView(m model) string {
 	var s string
-	s += "\nPress c(copy), a(add), d(delete), u(update),  m(change master) or q(quit)\n\n"
+	s += "\nPress c(copy), a(add), d(delete), u(update), m(master) or q(quit)\n\n"
 	for i, savedPasswords := range m.passwords {
 		cursor := " " // no cursor
 		if m.cursor == i {
